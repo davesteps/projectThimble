@@ -152,7 +152,7 @@ class MarketMultiple(gym.Env):
         return self.observation
 
     def new_observation(self):
-        self.observation = self.symbols[self.current_index - self.obs_window:self.current_index+1].as_matrix().transpose()
+        self.observation = self.symbols[(self.current_index - self.obs_window)+1:self.current_index+1].as_matrix().transpose()
 
     def _step(self, action):
         """Run one timestep of the environment's dynamics.

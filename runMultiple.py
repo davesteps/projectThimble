@@ -61,15 +61,18 @@ print(model.summary())
 
 memory = SequentialMemory(limit=5000,window_length=1)
 
+nb_steps = 5e6
+nb_steps_greedy = nb_steps*0.9
+
 # policy = BoltzmannQPolicy(tau=0.05)
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
-                              value_min=.1, value_test=.05,nb_steps=4e6)
+                              value_min=.1, value_test=.05,nb_steps=nb_steps_greedy)
 
 agent = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                  nb_steps_warmup=5000, gamma=.99, target_model_update=10000,
                  train_interval=4, delta_clip=1.)
 agent.compile(Adam(lr=.00025), metrics=['mae'])
-agent.fit(env, nb_steps=5e6, log_interval=10000, verbose=1)
+agent.fit(env, nb_steps=nb_steps, log_interval=10000, verbose=1)
 agent.save_weights('wghts',overwrite=True)
 # agent.load_weights('model8_6c01ba5f786ebd5938ca8e8f75008a63d2fe11bd/dqn_nav2_30x30x3_2conv_1e7_mvhz')
 
@@ -95,6 +98,7 @@ float(symbols.iloc[test_env.current_index, [0]])
 float(symbols.iloc[test_env.current_index+1, [0]])
 test_env.step(0)
 
+((136.7-135.72)/135.72)*100
 
 agent.test(test_env,nb_episodes=1,visualize=False)
 test_env.min_change
