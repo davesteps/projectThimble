@@ -181,18 +181,24 @@ class MarketMultiple(gym.Env):
         if self.current_index == self.end_index or self.total_reward < -100:
             done = True
 
-        self._max_change()
+        self.baseline_change()
 
         self.new_observation()
 
-        return self.observation, reward, done, {'TR':self.total_reward, 'MC':self.max_change}
+        return self.observation, reward, done, {'TR':self.total_reward,
+                                                'chg_mn':self.min_change,
+                                                'chg_mx': self.max_change
+                                                }
 
-    def _max_change(self):
+    def baseline_change(self):
         ii = [i for i in range(self.symbols.shape[1])]
         sp = self.symbols.iloc[self.start_index, ii].as_matrix()
         cp = self.symbols.iloc[self.current_index, ii].as_matrix()
 
-        self.max_change = round(max(((cp - sp) / sp) * 100), 2)
+        change = ((cp - sp) / sp) * 100
+        self.min_change = round(min(change),1)
+        self.max_change = round(max(change),1)
+
 
 
     def get_percent_change(self, p1, p2):
