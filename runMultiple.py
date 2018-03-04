@@ -24,17 +24,19 @@ import pandas as pd
 #             arrays[i] = arrays[i].squeeze()
 
 sym =  ['AAPL', 'MSFT', 'GOOGL']
-
-# User pandas_reader.data.DataReader to load the desired data. As simple as that.
 start = '2005-01-01'
-end = '2018-03-01'
+end = '2018-03-04'
 symbols = data.DataReader(sym, 'google', start, end).loc['Close']
 
 # symbols.plot()
 
 env = MarketMultiple(symbols,max_steps=130)
 
+env.start_index
+env.current_index
 # mem_len = 1
+
+
 
 nb_actions = env.action_space.n
 
@@ -61,28 +63,51 @@ memory = SequentialMemory(limit=5000,window_length=1)
 
 # policy = BoltzmannQPolicy(tau=0.05)
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
-                              value_min=.1, value_test=.05,nb_steps=9e6)
+                              value_min=.1, value_test=.05,nb_steps=4e6)
 
 agent = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                  nb_steps_warmup=5000, gamma=.99, target_model_update=10000,
                  train_interval=4, delta_clip=1.)
 agent.compile(Adam(lr=.00025), metrics=['mae'])
-agent.fit(env, nb_steps=1e7, log_interval=10000, verbose=1)
+agent.fit(env, nb_steps=5e6, log_interval=10000, verbose=1)
 agent.save_weights('wghts',overwrite=True)
 # agent.load_weights('model8_6c01ba5f786ebd5938ca8e8f75008a63d2fe11bd/dqn_nav2_30x30x3_2conv_1e7_mvhz')
 
 agent.test(env,nb_episodes=1,visualize=False)
+env.min_change
 env.max_change
 env.total_reward
 
 
 # Finally, evaluate our algorithm for 20 episodes.
+
+#
+sym =  ['AAPL', 'MSFT', 'GOOGL']
+start = '2005-01-01'
+end = '2018-03-04'
+symbols = data.DataReader(sym, 'google', start, end).loc['Close']
+
 test_env = MarketMultiple(symbols,test_mode=True)
+
 test_env.current_index
+test_env.observation[0,]
+float(symbols.iloc[test_env.current_index, [0]])
+float(symbols.iloc[test_env.current_index+1, [0]])
+test_env.step(0)
+
 
 agent.test(test_env,nb_episodes=1,visualize=False)
-test_env.max_change
 test_env.min_change
+test_env.max_change
 test_env.total_reward
+
+test_env.current_price
+test_env.tomorrow_price
+test_env.observation
+symbols.tail()
+
+
+
+
 
 

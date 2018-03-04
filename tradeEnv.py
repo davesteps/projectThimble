@@ -138,7 +138,7 @@ class MarketMultiple(gym.Env):
         if self.test_mode:
             self.start_index = self.symbols.shape[0] - 261
         else:
-            self.start_index = randint(260, self.symbols.shape[0] - 260)
+            self.start_index = randint(self.obs_window, self.symbols.shape[0] - (260+self.max_steps))
         self.end_index = self.start_index + self.max_steps - 1
         self.current_index = self.start_index
         # position = randint(0, 2)
@@ -152,7 +152,7 @@ class MarketMultiple(gym.Env):
         return self.observation
 
     def new_observation(self):
-        self.observation = self.symbols[self.current_index - self.obs_window:self.current_index].as_matrix().transpose()
+        self.observation = self.symbols[self.current_index - self.obs_window:self.current_index+1].as_matrix().transpose()
 
     def _step(self, action):
         """Run one timestep of the environment's dynamics.
@@ -167,13 +167,12 @@ class MarketMultiple(gym.Env):
         """
 
         assert self.action_space.contains(action)
-        self.current_index += 1
 
         if action == self.nullaction:
             reward = 0
         else:
             self.current_price = float(self.symbols.iloc[self.current_index, [action]])
-            self.tomorrow_price = float(self.symbols.iloc[self.current_index + 1, [action]])
+            self.tomorrow_price = float(self.symbols.iloc[self.current_index+1, [action]])
             reward = self.get_percent_change(self.current_price,self.tomorrow_price)
             self.total_reward += reward
 
@@ -183,6 +182,7 @@ class MarketMultiple(gym.Env):
 
         self.baseline_change()
 
+        self.current_index += 1
         self.new_observation()
 
         return self.observation, reward, done, {'TR':self.total_reward,
