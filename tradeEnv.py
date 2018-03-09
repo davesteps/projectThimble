@@ -186,7 +186,7 @@ class MarketMultiple(gym.Env):
         self.new_observation()
 
         return self.observation, reward, done, {'TR':self.total_reward,
-                                                'chg_mn':self.min_change,
+                                                'chg_mn':self.mean_change,
                                                 'chg_mx': self.max_change
                                                 }
 
@@ -196,7 +196,7 @@ class MarketMultiple(gym.Env):
         cp = self.symbols.iloc[self.current_index, ii].as_matrix()
 
         change = ((cp - sp) / sp) * 100
-        self.min_change = round(min(change),1)
+        self.mean_change = round(np.mean(change),1)
         self.max_change = round(max(change),1)
 
 
