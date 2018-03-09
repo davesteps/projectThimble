@@ -32,6 +32,8 @@ nb_steps_greedy = nb_steps*0.9
 
 lr = .00025
 
+comments = ''
+
 #########################
 
 out_root_dir=pathlib.Path('outputs/'+datetime.now().strftime("%Y%m%d_%H%M%S"))
@@ -44,6 +46,7 @@ out_root_dir.mkdir()
 log_file = str(out_root_dir / "model.log")
 logger = logzero.setup_logger(name=__name__, logfile=log_file, level=logging.DEBUG)
 # self.logger.removeHandler(self.logger.handlers[0])  # Remove stream handler (prevents stdout inc. for tests)
+logger.info("New model:{}".format(comments))
 logger.info("Starting using version = ""{}".format(_get_git_revision_hash()))
 logger.info("Start Date {0}, End Date {1}".format(start,end))
 logger.info("Symbols:{}".format(sym))
@@ -83,9 +86,11 @@ model.add(MaxPool1D())
 model.add(Conv1D(64,10))
 model.add(Activation('relu'))
 model.add(MaxPool1D())
+# model.add(Dropout(0.25))
 model.add(Conv1D(32,5))
 model.add(Activation('relu'))
 model.add(MaxPool1D())
+# model.add(Dropout(0.25))
 model.add(Flatten())
 model.add(Dense(256))
 model.add(Activation('relu'))
