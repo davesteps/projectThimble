@@ -123,6 +123,7 @@ class MarketMultiple(gym.Env):
         self.observation = None
         self.nullaction = symbols.shape[1]
         self.symbols = symbols
+        self.symbols_obs = symbols.copy()
         self.max_steps = max_steps
         self.obs_window = obs_window
         self.test_mode = test_mode
@@ -152,7 +153,12 @@ class MarketMultiple(gym.Env):
         return self.observation
 
     def new_observation(self):
-        self.observation = self.symbols[(self.current_index - self.obs_window)+1:self.current_index+1].as_matrix().transpose()
+        obs = self.symbols_obs[(self.current_index - self.obs_window)+1:self.current_index+1].as_matrix().transpose()
+
+        for d in range(obs.shape[0]):
+            obs[d] = (obs[d] - np.mean(obs[d])) / np.std(obs[d])
+
+        self.observation = obs
 
     def _step(self, action):
         """Run one timestep of the environment's dynamics.

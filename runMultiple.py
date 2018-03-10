@@ -27,14 +27,33 @@ sym =  ['AAPL', 'MSFT', 'GOOGL']
 start = '2005-01-01'
 end = '2018-03-04'
 
-nb_steps = 1e4
+max_steps=130
+obs_window=260
+max_steps_test = 260
+
+nb_steps = 5e5
 nb_steps_greedy = nb_steps*0.9
 
-lr = .00025
+# lr = .00025
+lr = .0003
 
 comments = ''
 
 #########################
+# TODO make position stick for five days
+# TODO make test mode smarter
+# TODO write out preds in test mode
+# TODO pass logger to env
+# TODO use dates rather than index
+# training.py l131
+# for i in range(len(names)):
+#     if names[i] == 'permute_1_input':
+#         arrays[i] = np.expand_dims(arrays[i].squeeze(), 0)
+#         # array = arrays[i].squeeze()
+#         # arrays[i] = array.squeeze()
+#         if len(arrays[i].shape) != 3:
+#             arrays[i] = arrays[i].squeeze()
+
 
 out_root_dir=pathlib.Path('outputs/'+datetime.now().strftime("%Y%m%d_%H%M%S"))
 
@@ -54,23 +73,11 @@ logger.info("nb_steps:{}".format(nb_steps))
 logger.info("nb_steps_greedy:{}".format(nb_steps_greedy))
 logger.info("learning_rate:{}".format(lr))
 
-
-# todo - Dates rather than index
-# training.py l131
-# for i in range(len(names)):
-#     if names[i] == 'permute_1_input':
-#         arrays[i] = np.expand_dims(arrays[i].squeeze(), 0)
-#         # array = arrays[i].squeeze()
-#         # arrays[i] = array.squeeze()
-#         if len(arrays[i].shape) != 3:
-#             arrays[i] = arrays[i].squeeze()
-
-
 symbols = data.DataReader(sym, 'google', start, end).loc['Close']
 
 # symbols.plot()
 
-env = MarketMultiple(symbols,max_steps=130,obs_window=260)
+env = MarketMultiple(symbols,max_steps=max_steps,obs_window=obs_window)
 
 logger.info("start_index:{}".format(env.start_index))
 
@@ -87,7 +94,7 @@ model.add(Conv1D(64,10))
 model.add(Activation('relu'))
 model.add(MaxPool1D())
 # model.add(Dropout(0.25))
-model.add(Conv1D(32,5))
+model.add(Conv1D(64,5))
 model.add(Activation('relu'))
 model.add(MaxPool1D())
 # model.add(Dropout(0.25))
@@ -113,11 +120,12 @@ agent = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memor
 agent.compile(Adam(lr=lr), metrics=['mae'])
 agent.fit(env, nb_steps=nb_steps, log_interval=10000, verbose=1)
 agent.save_weights(str(out_root_dir)+'/weights',overwrite=True)
-
+# agent.save_weights('weights_scaled',overwrite=True)
 
 logger.info("===============================================================")
 
-# agent.load_weights('wghts_best')
+# agent.load_weights('20180310_092342/weights')
+# /home/d/gitClones/projectThimble/outputs/20180310_092342
 
 
 # Finally, evaluate our algorithm for 20 episodes.
@@ -131,9 +139,10 @@ logger.info("===============================================================")
 #
 #
 #
-test_env = MarketMultiple(symbols,test_mode=True)
+test_env = MarketMultiple(symbols,test_mode=True,max_steps=max_steps_test,obs_window=obs_window)
 
 agent.test(test_env,nb_episodes=1,visualize=False)
+logger.info("test mean change: {}".format(test_env.mean_change))
 logger.info("test max change: {}".format(test_env.max_change))
 logger.info("test total reward: {}".format(test_env.total_reward))
 #
